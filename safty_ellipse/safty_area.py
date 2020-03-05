@@ -4,6 +4,12 @@ import copy
 
 
 def find_final_sin_cos(pt1, pt2):
+    """
+    Find the rotation angle (sine and cosine) of a ellipse.
+    :param pt1: array with 2 element
+    :param pt2: array with 2 element
+    :return: sine and cosine value
+    """
     p_bigger = pt1 if (pt1[0] > pt2[0]) else pt2
     p_smaller = pt2 if (pt1[0] > pt2[0]) else pt1
     dist = np.linalg.norm(pt1 - pt2, ord=2)
@@ -14,18 +20,27 @@ def find_final_sin_cos(pt1, pt2):
 
 
 def is_in_range(start, dest, check):
+    """
+    check whether a point is in the range of a circle
+    """
     radius = np.linalg.norm(start - dest, ord=2) / 2
     center = (start + dest) / 2
     return np.linalg.norm(center - check) <= radius
 
 
 def find_b_square(x, y, a, cos, sin):
+    """
+    Find the b square value given a point with fixed rotation angle and a.
+    """
     up = math.pow(x * sin + y * cos, 2)
     down_up = math.pow(x * cos - y * sin, 2)
     return abs(up / (1 - (down_up / math.pow(a, 2))))
 
 
 def tangent_line(a_square, b_square, cos, sin, given_pt, ctr):
+    """
+    Find tangent line of a ellipse given a point.
+    """
     turning = np.array([[cos, -sin], [sin, cos]])
     pt = given_pt - ctr
     pt = np.matmul(turning, pt.T)
@@ -47,6 +62,9 @@ def tangent_line(a_square, b_square, cos, sin, given_pt, ctr):
 
 
 def get_line_from_pts(pt1, pt2, ctr):
+    """
+    Find line given points, though need 3 points, 2 of the input may be the same.
+    """
     d = pt1 - pt2
     if d[0] == 0:
         a = 1
@@ -64,6 +82,9 @@ def get_line_from_pts(pt1, pt2, ctr):
 
 
 def find_search_constraint(pt1, pt2, radius):
+    """
+    Find the rectangle search constraint (the first 4 constraints in each constraints group)
+    """
     direction = pt1 - pt2
     turning = np.array([[0, -1], [1, 0]])
     dir90 = (np.matmul(turning, direction.T) / np.linalg.norm(direction, ord=2)) * radius
@@ -83,6 +104,9 @@ def find_search_constraint(pt1, pt2, radius):
 
 
 def find_search_range_dynamic(start, dest, radius, xb, yb):
+    """
+    Find possible block search range.
+    """
     xl = math.floor(max(1, min(start[0], dest[0]) - radius))
     xh = math.ceil(min(xb, (max(start[0], dest[0]) + radius)))
     yl = math.floor(max(1, min(start[1], dest[1]) - radius))
@@ -91,12 +115,21 @@ def find_search_range_dynamic(start, dest, radius, xb, yb):
 
 
 def is_same_side(matrix, check, origin):
+    """
+    Check whether a point is on the same side with a given point.
+    :param matrix: Constraints
+    :param check: points need checking
+    :param origin: the reference point
+    """
     ori_res = np.matmul(matrix, np.array([[origin[0], origin[1], 1]]).T)
     check_res = np.matmul(matrix, np.array([[check[0], check[1], 1]]).T)
     return np.all(ori_res * check_res > 0)
 
 
 def find_b_square_fixed_abratio(pt, adivb, cos, sin, ctr):
+    """
+    Given an a b ratio, find b.
+    """
     return math.pow((pt[0] - ctr[0]) * cos - (pt[1] - ctr[1]) * sin, 2) / math.pow(adivb, 2) \
            + math.pow((pt[0] - ctr[0]) * sin + (pt[1] - ctr[1]) * cos, 2)
 
@@ -108,6 +141,11 @@ class safetyEllipse:
         self.__radius = radius
 
     def ellipse_generate(self, way_point):
+        """
+        The main function that generate all ellipse and constraints
+        :param way_point: the simplified path (in grid coordinates)
+        :return: constraints and ellipse(represented as a, b, cosine, sine, center)
+        """
         cons_list = []
         ellipse_list = []
         for i in range(0, len(way_point) - 1):
@@ -119,6 +157,12 @@ class safetyEllipse:
         return cons_list, ellipse_list
 
     def __single_seg_ellipse(self, start, dest):
+        """
+        The function find ellipse in a single segment.
+        :param start: point in xy coordinates
+        :param dest: point in xy coordinates
+        :return:
+        """
         # find a square search range
         xl, xh, yl, yh = self.__find_search_range(start, dest)
         ellipse = []
@@ -157,6 +201,7 @@ class safetyEllipse:
         sxl, sxh, syl, syh = find_search_range_dynamic(start, dest, self.__radius, self.map2d.col_size,
                                                        self.map2d.row_size)
         barriers = []
+        # populate possible barriers.
         for i in range(sxl, sxh):
             for j in range(syl, syh):
                 if ((not self.map2d.is_blank_xy(i, j))
@@ -165,10 +210,12 @@ class safetyEllipse:
                     barriers.append(np.array([i, j]))
                     self.map2d.set_stat_xy(i, j, 3)
         abratio = a / math.sqrt(min_b_square)
+        # add ellipses from barriers
         while barriers:
             min_place = 0
             min_xy = barriers[0]
             b_square = find_b_square_fixed_abratio(min_xy, abratio, cosine, sine, ctr)
+            # find the barriers give the smallest b
             for i in range(len(barriers)):
                 temp_pt = barriers[i]
                 temp_b_sqr = find_b_square_fixed_abratio(temp_pt, abratio, cosine, sine, ctr)
@@ -182,7 +229,7 @@ class safetyEllipse:
                 np.array([math.sqrt(math.pow(abratio, 2) * b_square), math.sqrt(b_square), cosine, sine, ctr]))
             tla, tlb, tlc = tangent_line(math.pow(abratio, 2) * b_square, b_square, cosine, sine, min_xy, ctr)
             constraint = np.concatenate((constraint, np.array([[tla, tlb, tlc]])), axis=0)
-            # delete points in barriers
+            # delete points in barriers inside the constraints.
             barriers = [pt for pt in barriers if is_same_side(constraint, ctr, pt)]
         # color the safe area
         for i in range(sxl, sxh):
@@ -208,6 +255,13 @@ class safetyEllipse:
         return row, x
 
     def ellipse_mesh(self, ellipse_obj, sample=100, xy_to_row_col=True):
+        """
+        Provide the mesh to draw the ellipse.
+        :param ellipse_obj: ellipse object generated from ellipse_generate.
+        :param sample: Number of points when sampling.
+        :param xy_to_row_col: Whether transfer xy coordinates to grid coordinates, default is true.
+        :return:
+        """
         a = ellipse_obj[0]
         b = ellipse_obj[1]
         cos = ellipse_obj[2]
@@ -225,6 +279,12 @@ class safetyEllipse:
         return points
 
     def line_mesh(self, line, boundary=[0, 800, 0, 800], xy_to_row_col=True):
+        """
+        provide a line mesh given line.
+        :param line: a,b,c of ax + by + c = 0
+        :param boundary: point boundary
+        :param xy_to_row_col: Whether transfer xy coordinates to grid coordinates, default is true.
+        """
         a = line[0]
         b = line[1]
         c = line[2]
