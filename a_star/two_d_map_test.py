@@ -38,12 +38,16 @@ def main():
     end_p = np.array([200, 150])
     path = np.array(astar_solver.path_plan(start_p, end_p, visual=False))
 
-    path_x = path.T[0]
-    path_y = path.T[1]
+    filter_path = np.array(astar_solver.line_fitter(path))
+
+    path_y = filter_path.T[0]
+    path_x = filter_path.T[1]
     img_result = astar_solver.map2d.render_image()
     plt.imshow(img_result)
-    plt.plot(path_y, path_x)
+    plt.plot(path_x, path_y)
     plt.show()
+
+    print(filter_path)
 
 
 if __name__ == "__main__":

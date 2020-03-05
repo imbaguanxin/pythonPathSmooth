@@ -8,18 +8,15 @@ class map2D:
     2d map
     """
 
-    color_dic = {"white": 0,
-                 "black": 1,
-                 "green": 2,
-                 "red": 3,
-                 "blue": 4,
-                 "skyBlue": 5}
-    rgb_dic = {0: [255 / 255, 255 / 255, 255 / 255],
-               1: [0, 0, 0],
-               2: [0, 255 / 255, 0],
-               3: [255. / 255, 0, 0],
-               4: [0, 0, 255 / 255],
-               5: [102. / 255, 204. / 255, 255 / 255]}
+    rgb_dic = {0: [255 / 255, 255 / 255, 255 / 255],  # white
+               1: [0, 0, 0],  # black
+               2: [0, 255 / 255, 0],  # green
+               3: [255. / 255, 0, 0],  # red
+               4: [0, 0, 255 / 255],  # blue
+               5: [102. / 255, 204. / 255, 255 / 255],  # sky blue
+               6: [220. / 255, 220. / 255, 220. / 255],  # gainsboro
+               7: [156. / 255, 156. / 255, 156. / 255]  # dark grey
+               }
 
     def __init__(self, map2d):
         self.row_size = np.shape(map2d)[0]
@@ -36,7 +33,7 @@ class map2D:
 
     def is_blank(self, row, col):
         if self.valid_pos(row, col):
-            return self.color_stat[int(row)][int(col)] == 0
+            return self.ori_map[int(row)][int(col)] == 0
         else:
             return False
 
@@ -51,11 +48,11 @@ class map2D:
         dirs = [np.array([1, 0]), np.array([-1, 0]), np.array([0, 1]), np.array([0, -1])]
         pt = np.array([row, col])
         acc = 0
-        for singleDir in dirs:
-            candidate = pt + singleDir
+        for single_dir in dirs:
+            candidate = pt + single_dir
             if not self.is_blank(candidate[0], candidate[1]):
                 acc = acc + 1
-        return acc == 4
+        return acc >= 4
 
     def is_inside_block_xy(self, x, y):
         row, col = self.__transfer_xy(x, y)
@@ -79,34 +76,33 @@ class map2D:
         else:
             print("({},{}) is not available.".format(row, col))
 
+    def set_stat_xy(self, x, y, stat):
+        row, col = self.__transfer_xy(x, y)
+        self.set_stat(row, col, stat)
+
     def get_stat(self, row, col):
         if self.valid_pos(row, col):
             return self.color_stat[int(row)][int(col)]
         else:
             print("({},{}) is not available.".format(row, col))
 
+    def get_stat_xy(self, x, y):
+        row, col = self.__transfer_xy(x, y)
+        return self.get_stat(row, col)
+
     def render_image(self):
         result = np.zeros((self.row_size, self.col_size, 3))
         for row in range(0, self.row_size):
             for col in range(0, self.col_size):
-                stat = self.color_stat[int(row)][int(col)]
-                if stat == 0:
-                    result[int(row)][int(col)] = np.array([1, 1, 1])
-                elif stat == 1:
-                    result[int(row)][int(col)] = np.array([0, 0, 0])
-                elif stat == 2:
-                    result[int(row)][int(col)] = np.array([0, 1, 0])
-                elif stat == 3:
-                    result[int(row)][int(col)] = np.array([1, 0, 0])
-                elif stat == 4:
-                    result[int(row)][int(col)] = np.array([0, 0, 1])
-                elif stat == 5:
-                    result[int(row)][int(col)] = np.array([102. / 255, 204. / 255, 255 / 255])
-
-            # result[int(row)][int(col)] = np.array(self.rgb_dic[int(self.color_stat[int(row)][int(col)])])
+                result[int(row)][int(col)] = np.array(self.rgb_dic[int(self.color_stat[int(row)][int(col)])])
         return result
 
     def __transfer_xy(self, x, y):
         col = self.col_size - 1 if (x == self.col_size) else np.floor(x)
         row = self.row_size - 1 if (y == 0) else np.floor(self.row_size - y)
         return int(row), int(col)
+
+    def transfer_to_xy(self, pt):
+        x = pt[1]
+        y = self.row_size - pt[0]
+        return np.array([x, y])
