@@ -35,7 +35,7 @@ def main():
 
     astar_solver = aStar(test_2d_map)
     start_p = np.array([20, 20])
-    end_p = np.array([200, 150])
+    end_p = np.array([570, 570])
     path = np.array(astar_solver.path_plan(start_p, end_p, visual=False))
 
     filter_path = np.array(astar_solver.line_fitter(path))
