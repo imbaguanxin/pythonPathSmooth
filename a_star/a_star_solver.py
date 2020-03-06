@@ -72,9 +72,10 @@ class aStar:
                     img_result = self.map2d.render_image()
                     plt.imshow(img_result)
                     plt.show()
-            img_result = self.map2d.render_image()
-            plt.imshow(img_result)
-            plt.show()
+            if visual:
+                img_result = self.map2d.render_image()
+                plt.imshow(img_result)
+                plt.show()
             print("astar finished!")
             # Find the way points
             way_point = [np.copy(end_point)]
