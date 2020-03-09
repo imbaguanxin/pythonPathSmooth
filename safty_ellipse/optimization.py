@@ -48,7 +48,7 @@ class quadraticOptimization:
         cons = np.concatenate((c1, c2), axis=1)
         tr = np.concatenate((t1, t1), axis=1)
         context = cons * tr
-        
+
 
 
     def quadratic_optimization(self, constraints, path, amax, vmax, find_time=True, uniform_time=5, max_iter=10000):
