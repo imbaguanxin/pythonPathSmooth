@@ -137,6 +137,7 @@ def find_b_square_fixed_abratio(pt, adivb, cos, sin, ctr):
 class safetyEllipse:
 
     def __init__(self, map2d, radius):
+        self.__ori_map = copy.copy(map2d)
         self.map2d = copy.copy(map2d)
         self.__radius = radius
 
@@ -146,6 +147,7 @@ class safetyEllipse:
         :param way_point: the simplified path (in grid coordinates)
         :return: constraints and ellipse(represented as a, b, cosine, sine, center)
         """
+        self.map2d = copy.copy(self.__ori_map)
         cons_list = []
         ellipse_list = []
         for i in range(0, len(way_point) - 1):
