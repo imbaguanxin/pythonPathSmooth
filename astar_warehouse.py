@@ -1,8 +1,6 @@
 from a_star.two_d_map import map2D
-from a_star.two_d_map import map2D
 from a_star.a_star_solver import aStar
 from safty_ellipse.safty_area import safetyEllipse
-from safty_ellipse.safty_area import is_same_side
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as sio
@@ -127,28 +125,50 @@ def ballooned_warehouse():
 
 def main():
     test_2d_map = map2D(ware_house())
-    plt_img = test_2d_map.render_image()
-    plt.imshow(plt_img)
-    plt.show()
+    # plt_img = test_2d_map.render_image()
+    # plt.imshow(plt_img)
+    # plt.show()
 
     test_2d_map_ball = map2D(ballooned_warehouse())
-    plt_img = test_2d_map_ball.render_image()
-    plt.imshow(plt_img)
-    plt.show()
+    # plt_img = test_2d_map_ball.render_image()
+    # plt.imshow(plt_img)
+    # plt.show()
 
     # init astar
     astar_solver = aStar(test_2d_map_ball)
     start_p = np.array([20, 20])
     end_p = np.array([980, 1980])
+    print("start astar searching")
     path = np.array(astar_solver.path_plan(start_p, end_p, visual=False, draw_count=100000))
     # find the filtered path
     filter_path = np.array(astar_solver.line_fitter(path))
+    filter_path = np.array([[20, 20],
+                     [25, 26],
+                     [26, 746],
+                     [120, 839],
+                     [160, 840],
+                     [388, 1069],
+                     [389, 1159],
+                     [470, 1239],
+                     [710, 1240],
+                     [710, 1241],
+                     [711, 1592],
+                     [737, 1619],
+                     [738, 1708],
+                     [770, 1739],
+                     [960, 1740],
+                     [980, 1761],
+                     [980, 1980]])
     # render the path and the final result
     path_y = filter_path.T[0]
     path_x = filter_path.T[1]
+    sio.savemat("astar_warehouse_ballooned.mat",
+                {'astar_result_ballooned': test_2d_map_ball.color_stat})
+
     img_result = astar_solver.map2d.render_image()
     plt.imshow(img_result)
     plt.plot(path_x, path_y)
+    plt.savefig('warehouse_astar.png', dpi=400)
     plt.show()
     # print final result
     print("Filtered path: {}".format(filter_path))
@@ -170,6 +190,7 @@ def main():
     plt.ylim(0, 1000)
     plt.xlim(0, 2000)
     plt.gca().invert_yaxis()
+    plt.savefig('warehouse_ellipse.png', dpi=400)
     plt.show()
 
     plt.imshow(img_result)
@@ -181,19 +202,20 @@ def main():
     plt.ylim(0, 1000)
     plt.xlim(0, 2000)
     plt.gca().invert_yaxis()
+    plt.savefig('warehouse_ellipse_no_ellipse.png', dpi=400)
     plt.show()
 
 
 def no_astar():
     test_2d_map = map2D(ware_house())
-    plt_img = test_2d_map.render_image()
-    plt.imshow(plt_img)
-    plt.show()
+    # plt_img = test_2d_map.render_image()
+    # plt.imshow(plt_img)
+    # plt.show()
 
     test_2d_map_ball = map2D(ballooned_warehouse())
-    plt_img = test_2d_map_ball.render_image()
-    plt.imshow(plt_img)
-    plt.show()
+    # plt_img = test_2d_map_ball.render_image()
+    # plt.imshow(plt_img)
+    # plt.show()
 
     path = np.array([[20, 20],
                      [25, 26],
@@ -212,8 +234,26 @@ def no_astar():
                      [960, 1740],
                      [980, 1761],
                      [980, 1980]])
+    path_out = [[20, 20],
+                [25, 26],
+                [26, 746],
+                [120, 839],
+                [160, 840],
+                [388, 1069],
+                [389, 1159],
+                [470, 1239],
+                [710, 1240],
+                [710, 1241],
+                [711, 1592],
+                [737, 1619],
+                [738, 1708],
+                [770, 1739],
+                [960, 1740],
+                [980, 1761],
+                [980, 1980]]
     path_y = np.array(path).T[0]
     path_x = np.array(path).T[1]
+    print("calculate start.")
     safety_ellipse = safetyEllipse(test_2d_map, 50)
     cons_list, ellipse_list = safety_ellipse.ellipse_generate(path)
     print("calculate finish, start rendering.")
@@ -227,7 +267,7 @@ def no_astar():
     plt.ylim(0, 1000)
     plt.xlim(0, 2000)
     plt.gca().invert_yaxis()
-    plt.savefig('warehouse_no_ellipse.png', dpi=400)
+    # plt.savefig('warehouse_no_ellipse.png', dpi=400)
     plt.show()
 
     plt.imshow(img_result)
@@ -235,14 +275,17 @@ def no_astar():
         for ellipse in elli_stack:
             single_ellipse = safety_ellipse.ellipse_mesh(ellipse)
             plt.plot(single_ellipse[0], single_ellipse[1], linewidth=0.3)
+    path_y = np.array(path).T[0]
+    path_x = np.array(path).T[1]
     plt.ylim(0, 1000)
     plt.xlim(0, 2000)
+    plt.plot(path_x, path_y, linewidth=0.5)
     plt.gca().invert_yaxis()
     plt.savefig('warehouse_ellipse.png', dpi=400)
     plt.show()
-    sio.savemat("warehouse_date.mat",
-                {'path': path,
-                 'constraints': cons_list})
+    # sio.savemat("warehouse_date.mat",
+    #             {'path': path_out,
+    #              'constraints': cons_list})
 
 
 if __name__ == '__main__':
